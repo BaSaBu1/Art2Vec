@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import {
     ArrowRight,
     Info,
@@ -1400,6 +1401,16 @@ function NetworkModal({
     onClose: () => void;
     onInspectPainting: (id: string) => void;
 }) {
+    const scrollRef = useRef<HTMLDivElement | null>(null);
+    const panState = useRef({
+        active: false,
+        pointerId: -1,
+        startX: 0,
+        startY: 0,
+        scrollLeft: 0,
+        scrollTop: 0,
+    });
+    const [isPanning, setIsPanning] = useState(false);
     const [selectedNode, setSelectedNode] = useState<MotifGraphNode>(
         graph.nodes[0],
     );
@@ -1412,9 +1423,74 @@ function NetworkModal({
     const examples = graph.motifExamples[selectedNode.id] ?? [];
     const example = selectedExample ?? examples[0];
 
+    useEffect(() => {
+        const scrollEl = scrollRef.current;
+        if (!scrollEl) {
+            return;
+        }
+        scrollEl.scrollLeft = (scrollEl.scrollWidth - scrollEl.clientWidth) / 2;
+        scrollEl.scrollTop = (scrollEl.scrollHeight - scrollEl.clientHeight) / 2;
+    }, [graph]);
+
     const selectNode = (node: MotifGraphNode) => {
         setSelectedNode(node);
         setSelectedExample(randomItem(graph.motifExamples[node.id] ?? []));
+    };
+
+    const endPan = (event: ReactPointerEvent<HTMLDivElement>) => {
+        if (
+            !panState.current.active ||
+            panState.current.pointerId !== event.pointerId
+        ) {
+            return;
+        }
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+        panState.current.active = false;
+        setIsPanning(false);
+    };
+
+    const startPan = (event: ReactPointerEvent<HTMLDivElement>) => {
+        if (event.button !== 0) {
+            return;
+        }
+        const target = event.target as Element;
+        if (target.closest(".network-node")) {
+            return;
+        }
+        const scrollEl = scrollRef.current;
+        if (!scrollEl) {
+            return;
+        }
+        panState.current = {
+            active: true,
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startY: event.clientY,
+            scrollLeft: scrollEl.scrollLeft,
+            scrollTop: scrollEl.scrollTop,
+        };
+        event.currentTarget.setPointerCapture(event.pointerId);
+        setIsPanning(true);
+        event.preventDefault();
+    };
+
+    const pan = (event: ReactPointerEvent<HTMLDivElement>) => {
+        if (
+            !panState.current.active ||
+            panState.current.pointerId !== event.pointerId
+        ) {
+            return;
+        }
+        const scrollEl = scrollRef.current;
+        if (!scrollEl) {
+            return;
+        }
+        const dx = event.clientX - panState.current.startX;
+        const dy = event.clientY - panState.current.startY;
+        scrollEl.scrollLeft = panState.current.scrollLeft - dx;
+        scrollEl.scrollTop = panState.current.scrollTop - dy;
     };
 
     return (
@@ -1424,7 +1500,14 @@ function NetworkModal({
             wide
         >
             <div className="network-fullscreen">
-                <div className="network-scroll">
+                <div
+                    ref={scrollRef}
+                    className={`network-scroll ${isPanning ? "dragging" : ""}`}
+                    onPointerDown={startPan}
+                    onPointerMove={pan}
+                    onPointerUp={endPan}
+                    onPointerCancel={endPan}
+                >
                     <NetworkSvg
                         graph={graph}
                         movement={movement}

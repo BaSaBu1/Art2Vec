@@ -14,6 +14,7 @@ import networkx as nx
 
 ROOT = Path(__file__).resolve().parents[2]
 SITE = ROOT / "website_v2"
+DATA_ROOT = ROOT / "data_and_results" if (ROOT / "data_and_results").exists() else ROOT
 
 
 MOVEMENTS = [
@@ -363,7 +364,7 @@ def community_description(top_motifs: list[str]) -> str:
 
 
 def read_metadata() -> dict[str, dict[str, str]]:
-    rows = read_csv(ROOT / "data_clean" / "color_analysis_dataset.tsv", delimiter="\t")
+    rows = read_csv(DATA_ROOT / "data_clean" / "color_analysis_dataset.tsv", delimiter="\t")
     output = {}
     for row in rows:
         path = clean_text(row.get("Path"))
@@ -376,7 +377,7 @@ def read_motif_edges() -> tuple[dict[str, list[str]], dict[str, dict[str, list[s
     motif_by_path: dict[str, set[str]] = defaultdict(set)
     paths_by_motif: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
     for movement in MOVEMENTS:
-        path = ROOT / "motif" / "by_movement" / movement["folder"] / "motif_painting_edges.csv"
+        path = DATA_ROOT / "motif" / "by_movement" / movement["folder"] / "motif_painting_edges.csv"
         for row in read_csv(path):
             raw_path = clean_text(row.get("painting_id")).replace("painting::", "", 1)
             motif = clean_text(row.get("motif"))
@@ -388,7 +389,7 @@ def read_motif_edges() -> tuple[dict[str, list[str]], dict[str, dict[str, list[s
 
 def read_embedding_coords() -> dict[str, dict[str, float]]:
     coords = {}
-    for row in read_csv(ROOT / "embedding" / "cross_movement_embedding_coords.csv"):
+    for row in read_csv(DATA_ROOT / "embedding" / "cross_movement_embedding_coords.csv"):
         path = clean_text(row.get("path"))
         if path:
             coords[path] = {"x": parse_float(row.get("x")), "y": parse_float(row.get("y"))}
@@ -404,7 +405,7 @@ def build_paintings(
     color_examples: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(lambda: defaultdict(list))
 
     for movement in MOVEMENTS:
-        base_path = ROOT / "color" / "by_movement" / movement["folder"] / "network" / "color_network_base_thresholded.tsv"
+        base_path = DATA_ROOT / "color" / "by_movement" / movement["folder"] / "network" / "color_network_base_thresholded.tsv"
         for row in read_csv(base_path, delimiter="\t"):
             path = clean_text(row.get("Path"))
             if not path:
@@ -473,8 +474,8 @@ def build_paintings(
 
 
 def read_summaries() -> dict[str, dict[str, Any]]:
-    motif_rows = {movement_id(row.get("art_movement")): row for row in read_csv(ROOT / "motif" / "motif_network_summary.csv")}
-    color_rows = {movement_id(row.get("movement")): row for row in read_csv(ROOT / "color" / "color_network_summary.csv")}
+    motif_rows = {movement_id(row.get("art_movement")): row for row in read_csv(DATA_ROOT / "motif" / "motif_network_summary.csv")}
+    color_rows = {movement_id(row.get("movement")): row for row in read_csv(DATA_ROOT / "color" / "color_network_summary.csv")}
     output = {}
     for movement in MOVEMENTS:
         mid = movement["id"]
@@ -497,7 +498,7 @@ def read_centrality() -> dict[str, dict[str, list[dict[str, Any]]]]:
     output = {}
     for movement in MOVEMENTS:
         rows = []
-        path = ROOT / "motif" / "by_movement" / movement["folder"] / "motif_centrality.csv"
+        path = DATA_ROOT / "motif" / "by_movement" / movement["folder"] / "motif_centrality.csv"
         for row in read_csv(path):
             motif_id = clean_text(row.get("motif"))
             rows.append(
@@ -554,7 +555,7 @@ def build_motif_graphs(
     for movement in MOVEMENTS:
         mid = movement["id"]
         folder = movement["folder"]
-        edge_path = ROOT / "motif" / "by_movement" / folder / "motif_projected_edges.csv"
+        edge_path = DATA_ROOT / "motif" / "by_movement" / folder / "motif_projected_edges.csv"
         graph = nx.Graph()
         for item in centrality[mid]["weightedDegree"]:
             graph.add_node(item["id"])
@@ -681,7 +682,7 @@ def build_color_analysis(color_examples: dict[str, dict[str, list[dict[str, Any]
     count_sum: Counter[str] = Counter()
 
     for movement in MOVEMENTS:
-        rows = read_csv(ROOT / "color" / "by_movement" / movement["folder"] / "extraction" / "color_tag_counts.csv")
+        rows = read_csv(DATA_ROOT / "color" / "by_movement" / movement["folder"] / "extraction" / "color_tag_counts.csv")
         for index, row in enumerate(rows, start=1):
             color = clean_text(row.get("color_hex")).lower()
             count = parse_int(row.get("painting_count"))
@@ -712,7 +713,7 @@ def build_color_analysis(color_examples: dict[str, dict[str, list[dict[str, Any]
         rank_table.append({"hex": color, "cells": cells})
 
     distinctive: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    for row in read_csv(ROOT / "color_analysis" / "results" / "distinctive_colors_lift.csv"):
+    for row in read_csv(DATA_ROOT / "color_analysis" / "results" / "distinctive_colors_lift.csv"):
         mid = movement_id(row.get("movement"))
         color = clean_text(row.get("color_hex")).lower()
         if mid in MOVEMENT_BY_ID and len(distinctive[mid]) < 8:
@@ -732,7 +733,7 @@ def build_color_analysis(color_examples: dict[str, dict[str, list[dict[str, Any]
 def build_embedding(paintings_by_id: dict[str, dict[str, Any]], id_by_path: dict[str, str], summaries: dict[str, dict[str, Any]]) -> dict[str, Any]:
     medoids = {}
     medoid_ids = set()
-    for row in read_csv(ROOT / "embedding" / "medoids_summary.csv"):
+    for row in read_csv(DATA_ROOT / "embedding" / "medoids_summary.csv"):
         mid = movement_id(row.get("art_movement"))
         pid = id_by_path.get(clean_text(row.get("path")))
         if not pid:
@@ -750,7 +751,7 @@ def build_embedding(paintings_by_id: dict[str, dict[str, Any]], id_by_path: dict
         }
 
     for movement in MOVEMENTS:
-        medoid_path = ROOT / "embedding" / "by_movement" / movement["folder"] / "medoid.csv"
+        medoid_path = DATA_ROOT / "embedding" / "by_movement" / movement["folder"] / "medoid.csv"
         rows = read_csv(medoid_path)
         if rows:
             row = rows[0]
@@ -764,7 +765,7 @@ def build_embedding(paintings_by_id: dict[str, dict[str, Any]], id_by_path: dict
 
     points = []
     per_movement_seen = Counter()
-    for row in read_csv(ROOT / "embedding" / "cross_movement_embedding_coords.csv"):
+    for row in read_csv(DATA_ROOT / "embedding" / "cross_movement_embedding_coords.csv"):
         path = clean_text(row.get("path"))
         pid = id_by_path.get(path)
         if not pid:

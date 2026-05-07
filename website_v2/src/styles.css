@@ -1699,6 +1699,19 @@ em {
   min-height: 0;
   overflow: auto;
   background: var(--bg);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.network-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.network-scroll.dragging {
+  cursor: grabbing;
 }
 
 .network-scroll .network-svg {
