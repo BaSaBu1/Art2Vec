@@ -1,0 +1,2 @@
+path,author_name,painting_name,image_url,x,y,art_movement,n_paintings,graph_edges,fiedler_value
+Artists2/Pieter Bruegel The Elder/Parable Of The Blind 1568.jpg,Pieter Bruegel The Elder,Parable Of The Blind 1568,https://uploads3.wikiart.org/images/pieter-bruegel-the-elder/parable-of-the-blind-1568.jpg!Large.jpg,-4.156499831755308e-06,0.00011776401406116997,Northern Renaissance,2312,17095,0.006480463061238848

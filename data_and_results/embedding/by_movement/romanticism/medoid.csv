@@ -1,0 +1,2 @@
+path,author_name,painting_name,image_url,x,y,art_movement,n_paintings,graph_edges,fiedler_value
+Artists2/Gustave Dore/Eléphant.jpg,Gustave Dore,Eléphant,https://uploads1.wikiart.org/images/gustave-dore/eléphant.jpg!Large.jpg,-0.0008891862869273707,-0.0007040559097991235,Romanticism,4371,31429,0.0024691978953458615

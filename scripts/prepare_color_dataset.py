@@ -1,8 +1,9 @@
 """
-Step 3: Download each painting's WikiArt image and extract dominant colors as 108-bin HSV percentages.
-Usage: python scripts/prepare_color_dataset.py [--movement all|<Movement>]
-Inputs: data_clean/color_analysis_dataset.tsv
-Outputs (per movement): color/by_movement/<movement>/extraction/color_network_base.tsv + summary files
+This script prepares the color data for each movement by downloading painting
+images and measuring how much of each image falls into a shared set of HSV color
+bins. It produces a painting-level table with color percentages, a color
+frequency summary, and a failure report for images that could not be retrieved
+or decoded.
 """
 
 from __future__ import annotations
@@ -74,7 +75,7 @@ def hsv_bin_center_to_rgb(bin_id: int) -> tuple[int, int, int]:
     s_center = int(round(((s_idx + 0.5) / S_BINS) * 255))
     v_center = int(round(((v_idx + 0.5) / V_BINS) * 255))
 
-    # Pillow handles the HSV→RGB conversion
+    # Pillow handles the HSV to RGB conversion.
     rgb = Image.fromarray(np.array([[[h_center, s_center, v_center]]], dtype=np.uint8), mode="HSV").convert("RGB")
     r, g, b = rgb.getpixel((0, 0))
     return int(r), int(g), int(b)
@@ -118,7 +119,7 @@ def extract_bin_colors(
     max_side: int,
     min_keep_count: int,
 ) -> list[tuple[int, float]]:
-    """Return (bin_id, fraction) pairs for the painting's dominant colors (≥ min_pct or top min_keep_count)."""
+    """Return (bin_id, fraction) pairs for dominant colors kept by threshold or rank."""
     with Image.open(io.BytesIO(image_bytes)) as img:
         hsv = img.convert("HSV")
         if max(hsv.size) > max_side:
@@ -200,6 +201,8 @@ def prepare_for_movement(
         session = requests.Session()
         session.headers.update({"User-Agent": "Art2Vec-ColorPrep/1.0"})
 
+        # Each image is handled independently so one failed download does not
+        # stop color extraction for the rest of the movement.
         for row in reader:
             if len(row) <= max(movement_idx, url_idx):
                 continue
@@ -214,6 +217,8 @@ def prepare_for_movement(
             try:
                 response = session.get(image_url, timeout=timeout)
                 response.raise_for_status()
+                # The extraction step uses the fixed color vocabulary, keeping
+                # only bins large enough to describe the painting.
                 color_items = extract_bin_colors(
                     response.content,
                     min_pct=min_pct,
@@ -241,6 +246,8 @@ def prepare_for_movement(
             for hex_value in set(color_hex_values):
                 color_occurrence[hex_value] += 1
 
+            # Percentages and bin IDs are both retained: percentages are used
+            # for features, while IDs keep the extraction reproducible.
             writer.writerow(
                 base_values
                 + [

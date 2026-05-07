@@ -1,8 +1,10 @@
 """
-Step 2: Build the two analysis-ready datasets from the filtered five-movement paintings.
-Produces color_analysis_dataset.tsv (all paintings) and motif_analysis_dataset.tsv (frequency-thresholded tags only).
-Inputs: raw_data_eda/filtered_5movements_with_tags.tsv, raw_data_eda/filtered_5movements_tag_counts_thresholded.csv
-Outputs: data_clean/color_analysis_dataset.tsv, data_clean/motif_analysis_dataset.tsv, data_clean/clean_dataset_summary.csv
+This script turns the filtered five-movement data into two cleaner analysis
+tables. The color table keeps every retained painting because color extraction
+can still work when a motif is rare, while the motif table keeps only motifs
+that passed the frequency threshold so the motif networks are not dominated by
+one-off tags. It also writes a compact summary showing how many paintings remain
+in each version of the cleaned data.
 """
 
 from __future__ import annotations
@@ -30,7 +32,7 @@ def split_tags(tag_value: str) -> list[str]:
 
 
 def load_kept_tags() -> dict[str, set[str]]:
-    """Return a dict mapping movement name → set of tags that passed the frequency threshold."""
+    """Return a dict mapping each movement to the tags that passed the frequency threshold."""
     kept: defaultdict[str, set[str]] = defaultdict(set)
     with THRESHOLDED_TAGS.open(newline="", encoding="utf-8") as file:
         reader = csv.DictReader(file)
@@ -77,6 +79,8 @@ def main() -> None:
             movement = row[movement_idx].strip()
             tag_value = row[tag_idx].strip()
 
+            # Color analysis needs all available paintings, so the row is
+            # written before any motif threshold is applied.
             color_writer.writerow(row)
             color_rows += 1
             movement_color_counts[movement] += 1
@@ -85,6 +89,8 @@ def main() -> None:
             if not retained:
                 continue
 
+            # Motif analysis uses the same metadata row but replaces the raw
+            # tag string with only the retained motif vocabulary.
             new_row = list(row)
             new_row[tag_idx] = ";".join(retained)
             motif_writer.writerow(new_row)

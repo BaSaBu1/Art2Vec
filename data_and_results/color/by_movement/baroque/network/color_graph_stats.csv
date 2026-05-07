@@ -1,0 +1,2 @@
+movement,nodes,edges,density,components,giant_component_nodes,giant_component_edges,avg_degree,avg_weighted_degree,average_clustering,transitivity,average_shortest_path_giant,diameter_giant
+Baroque,66,1520,0.708625,1,66,1520,46.060606,1693.242424,0.012762,0.794694,1.291375,2

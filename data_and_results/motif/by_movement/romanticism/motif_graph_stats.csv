@@ -1,0 +1,2 @@
+art_movement,nodes,edges,density,components,giant_component_nodes,giant_component_edges,avg_degree,avg_weighted_degree,average_clustering,transitivity,average_shortest_path_giant,diameter_giant
+Romanticism,73,741,0.281963,1,73,741,20.30137,256.794521,0.010517,0.460818,1.739346,3

@@ -1,8 +1,9 @@
 """
-Step 1: Filter ART500K to five target movements, keeping only single-label paintings with at least one tag.
-Requires raw data (not included in submission); outputs saved to raw_data_eda/.
-Inputs: data/label_list.tsv, data/head_info.csv
-Outputs: data/filtered_5movements_with_tags.tsv, filtered_5movements_counts.csv, filtered_5movements_tag_counts.csv
+This script creates the five-movement subset used throughout the project. It
+keeps paintings from Northern Renaissance, Baroque, Romanticism, Impressionism,
+and Cubism when they have at least one motif tag and belong to a single selected
+movement. It also summarizes the number of retained paintings and the motif
+frequencies within each movement.
 """
 
 from __future__ import annotations
@@ -65,6 +66,8 @@ def main() -> None:
             movement = row[art_movement_idx].strip()
             tag_value = row[tag_idx].strip()
 
+            # The analysis compares clean movement groups, so ambiguous rows
+            # and paintings without motifs are excluded here.
             if not tag_value:
                 continue
             if movement not in TARGET_MOVEMENTS:
@@ -78,6 +81,8 @@ def main() -> None:
             for tag in split_tags(tag_value):
                 movement_tag_counts[movement][tag] += 1
 
+    # These counts are the quick check that the filtered subset is balanced
+    # enough for the later motif, color, and embedding work.
     with MOVEMENT_COUNTS_PATH.open("w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(["art_movement", "tagged_paintings", "unique_tags"])

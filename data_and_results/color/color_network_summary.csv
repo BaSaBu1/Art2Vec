@@ -1,0 +1,6 @@
+movement,paintings_before,paintings_after,colors_before,colors_after,min_occurrence,painting_nodes,color_nodes,bipartite_edges,projected_edges
+Baroque,2844,2844,81,66,14,2844,66,18435,1520
+Cubism,1836,1836,102,84,9,1836,84,10702,2395
+Impressionism,4888,4888,97,72,24,4888,72,31591,2086
+Northern Renaissance,2378,2378,87,69,12,2378,69,13822,1645
+Romanticism,4613,4613,92,67,23,4613,67,27173,1850

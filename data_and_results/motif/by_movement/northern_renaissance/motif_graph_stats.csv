@@ -1,0 +1,2 @@
+art_movement,nodes,edges,density,components,giant_component_nodes,giant_component_edges,avg_degree,avg_weighted_degree,average_clustering,transitivity,average_shortest_path_giant,diameter_giant
+Northern Renaissance,63,434,0.222222,1,63,434,13.777778,156.031746,0.011077,0.441341,1.946749,4

@@ -1,0 +1,2 @@
+path,author_name,painting_name,image_url,x,y,art_movement,n_paintings,graph_edges,fiedler_value
+Artists2/Pablo Picasso/View Of Riera De Sant Joan From The Window 1900.jpg,Pablo Picasso,View Of Riera De Sant Joan From The Window 1900,https://uploads5.wikiart.org/images/pablo-picasso/view-of-riera-de-sant-joan-from-the-window-1900.jpg!Large.jpg,-0.0005778059413977552,-0.0011348619446960755,Cubism,1762,12825,0.007205757178378824

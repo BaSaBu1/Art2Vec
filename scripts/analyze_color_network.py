@@ -1,8 +1,10 @@
 """
-Phase 1: Build painting-color bipartite networks, project to color co-occurrence graphs, and compute centrality.
-Usage: python scripts/analyze_color_network.py [--movement all|<Movement>]
-Inputs: color/by_movement/<movement>/extraction/color_network_base.tsv
-Outputs (per movement): color/by_movement/<movement>/network/ — edges, centrality, Gephi files, color/color_network_summary.csv
+This script builds color networks from the extracted HSV color bins. For each
+movement, it keeps colors that appear often enough, connects paintings to their
+retained colors, and then projects those links into a color co-occurrence
+network. It writes the filtered color tables, edge lists, centrality measures,
+graph summaries, and Gephi-ready exports used to study shared and distinctive
+palettes.
 """
 
 from __future__ import annotations
@@ -10,7 +12,7 @@ from __future__ import annotations
 import argparse
 import csv
 import itertools
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 
 import networkx as nx
@@ -128,6 +130,8 @@ def build_for_movement(
         override=min_occurrence_override,
     )
 
+    # Rare bins are removed before projection so isolated colors do not create
+    # noisy nodes with little interpretive value.
     kept_colors = {color for color, count in color_occurrence.items() if count >= threshold}
 
     filtered_rows: list[dict[str, str]] = []
@@ -220,7 +224,9 @@ def build_for_movement(
     for (color_a, color_b), count in pair_counts.items():
         projected.add_edge(f"color::{color_a}", f"color::{color_b}", weight=count)
 
-    # Centralities.
+    # Centralities summarize which colors sit at the center of the movement's
+    # shared palette, even though the color-rank display became more useful for
+    # the final website.
     degree_centrality = nx.degree_centrality(projected) if projected.number_of_nodes() > 1 else {}
     weighted_degree = dict(projected.degree(weight="weight"))
     betweenness = (

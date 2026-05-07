@@ -1,8 +1,10 @@
 """
-Phase 1: Build painting-motif bipartite networks, project to motif co-occurrence graphs, and compute centrality.
-Inputs: data_clean/motif_analysis_dataset.tsv
-Outputs (per movement): motif/by_movement/<movement>/ — edges, centrality, graph stats, Gephi files
-Also writes: motif/motif_network_summary.csv
+This script builds the motif networks used in the first phase of the project.
+For each art movement, it connects paintings to their retained motif tags, then
+projects that structure into a motif co-occurrence network where two motifs are
+linked when they appear in the same paintings. The script writes the network
+tables, centrality measures, graph summaries, and Gephi-ready files that support
+the motif analysis and website visualizations.
 """
 
 from __future__ import annotations
@@ -29,7 +31,7 @@ def split_tags(tag_value: str) -> list[str]:
 
 
 def movement_slug(name: str) -> str:
-    """Convert a movement name to a filesystem-safe folder name (e.g. 'Northern Renaissance' → 'northern_renaissance')."""
+    """Convert a movement name to a filesystem-safe folder name."""
     return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
 
 
@@ -115,6 +117,8 @@ def main() -> None:
 
         movement_graphs: dict[str, nx.Graph] = defaultdict(nx.Graph)
 
+        # First build one bipartite graph per movement, with paintings on one
+        # side and motif tags on the other.
         for row in reader:
             if len(row) <= max(movement_idx, tag_idx):
                 continue
@@ -161,6 +165,9 @@ def main() -> None:
             graph = movement_graphs[movement]
             painting_nodes = [n for n, d in graph.nodes(data=True) if d.get("node_type") == "painting"]
             motif_nodes = [n for n, d in graph.nodes(data=True) if d.get("node_type") == "motif"]
+
+            # Projection turns "paintings share motifs" into direct motif-to-
+            # motif edges weighted by the number of paintings they share.
             projected = bipartite.weighted_projected_graph(graph, motif_nodes)
 
             movement_dir = BY_MOVEMENT_DIR / movement_slug(movement)
@@ -261,6 +268,8 @@ def main() -> None:
                     label = projected.nodes[node]["label"]
                     gephi_nodes_writer.writerow([label, label])
 
+                # Centrality values are written together so the same file can
+                # support both analysis tables and website ranking controls.
                 degree_centrality = nx.degree_centrality(projected) if projected.number_of_nodes() > 1 else {}
                 weighted_degree = dict(projected.degree(weight="weight"))
                 betweenness = (

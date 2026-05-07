@@ -1,8 +1,9 @@
 """
-Step 0: Count paintings and tag frequencies per movement in the raw ART500K dataset.
-Requires raw data (not included in submission); outputs saved to raw_data_eda/.
-Inputs: data/label_list.tsv, data/head_info.csv
-Outputs: data/art_movement_tagged_counts.csv, data/top10_art_movement_tags.csv
+This script gives a first overview of the raw ART500K metadata by counting how
+many paintings in each art movement have motif tags and how often each motif
+appears. It produces a movement-level summary and a motif-frequency table that
+make it easier to choose which movements have enough tagged paintings for the
+main analysis.
 """
 
 from __future__ import annotations
@@ -45,6 +46,8 @@ def main() -> None:
     tagged_rows = 0
     total_rows = 0
 
+    # The raw metadata is large and row-based, so this pass only keeps counts
+    # instead of loading the full dataset into memory.
     with LABEL_LIST_PATH.open(newline="", encoding="utf-8") as file:
         reader = csv.reader(file, delimiter="\t")
         for row in reader:
@@ -63,12 +66,14 @@ def main() -> None:
 
     top_movements = [movement for movement, _ in movement_tagged_counts.most_common(10)]
 
+    # The first output is used to decide which movements have enough data.
     with MOVEMENT_SUMMARY_PATH.open("w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(["art_movement", "tagged_paintings", "unique_tags"])
         for movement, count in movement_tagged_counts.most_common():
             writer.writerow([movement, count, len(movement_tag_counts[movement])])
 
+    # The second output keeps all motifs for the ten largest tagged movements.
     with TOP_TAGS_PATH.open("w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(["art_movement", "tag", "count"])

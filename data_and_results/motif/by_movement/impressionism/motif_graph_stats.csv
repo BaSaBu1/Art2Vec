@@ -1,0 +1,2 @@
+art_movement,nodes,edges,density,components,giant_component_nodes,giant_component_edges,avg_degree,avg_weighted_degree,average_clustering,transitivity,average_shortest_path_giant,diameter_giant
+Impressionism,54,468,0.327044,1,54,468,17.333333,165.592593,0.008055,0.527482,1.712788,3

@@ -1,9 +1,9 @@
 """
-embed_paintings.py — Phase 2: Laplacian Eigenmap embedding of paintings.
-
-Builds a painting-painting k-NN similarity graph from three feature signals
-(motif presence, HSV color profile, genre/nationality metadata), then places
-each painting in 2D space via the eigenvectors of the normalized graph Laplacian.
+This script creates the geometric embedding used in the second phase of the
+project. It represents each painting with motif, color, genre, and nationality
+signals, builds a nearest-neighbor similarity network, places the paintings in
+two dimensions with Laplacian Eigenmaps, and records the medoid painting nearest
+the center of each movement.
 """
 
 import os
@@ -34,12 +34,12 @@ MOVEMENTS = [
 N_NEIGHBORS  = 10     # k-NN: neighbors per painting in the similarity graph
 N_DIMS       = 5      # number of Laplacian eigenvectors to compute
 MIN_SIM      = 0.05   # drop edges with cosine similarity below this threshold
-N_BINS       = 108    # total HSV color bins (12 hue × 3 sat × 3 val)
+N_BINS       = 108    # total HSV color bins (12 hue x 3 sat x 3 val)
 TOP_N_CATS   = 10     # how many top genres/nationalities to keep as explicit columns
 
 # Feature block weights: motif 40%, color 40%, metadata 20%.
 # Scaling each block by sqrt(w) before concatenation gives
-# cosine(X_i, X_j) ≈ 0.4·motif_cos + 0.4·color_cos + 0.2·meta_cos.
+# cosine(X_i, X_j) is about 0.4 motif + 0.4 color + 0.2 metadata.
 MOTIF_WEIGHT = 0.4
 COLOR_WEIGHT = 0.4
 META_WEIGHT  = 0.2
@@ -52,12 +52,11 @@ MOVEMENT_COLORS = {
     "Romanticism":          "#B22222",
 }
 
-# ---------------------------------------------------------------------------
+
 # Data loading
-# ---------------------------------------------------------------------------
 
 def load_motif_features(movement_folder):
-    """Binary painting × motif matrix from Phase 1 bipartite network edges."""
+    """Binary painting by motif matrix from Phase 1 bipartite network edges."""
     edges_path = os.path.join(
         "motif", "by_movement", movement_folder, "motif_painting_edges.csv"
     )
@@ -131,9 +130,7 @@ def encode_metadata(meta_raw_df, top_genres=None, top_nats=None):
     return feat_df, top_genres, top_nats
 
 
-# ---------------------------------------------------------------------------
 # Feature matrix construction
-# ---------------------------------------------------------------------------
 
 def _l2_normalize(mat):
     norms = np.linalg.norm(mat, axis=1, keepdims=True)
@@ -144,7 +141,7 @@ def build_combined_features(motif_df, color_df, meta_onehot_df):
     """
     Merge the three feature blocks on shared painting paths and concatenate
     with sqrt(weight) scaling so cosine similarity decomposes as
-    0.4·motif + 0.4·color + 0.2·metadata.
+    0.4 motif + 0.4 color + 0.2 metadata.
     Returns (X, paths).
     """
     common = (
@@ -168,9 +165,7 @@ def build_combined_features(motif_df, color_df, meta_onehot_df):
     return X, list(common)
 
 
-# ---------------------------------------------------------------------------
 # Graph and embedding
-# ---------------------------------------------------------------------------
 
 def build_knn_graph(X):
     """Cosine k-NN similarity graph; edges below MIN_SIM are dropped. Returns CSR matrix."""
@@ -197,7 +192,7 @@ def build_knn_graph(X):
 
 def compute_laplacian_embedding(A):
     """
-    Normalized graph Laplacian L = I − D^{-1/2} A D^{-1/2}.
+    Normalized graph Laplacian L = I - D^{-1/2} A D^{-1/2}.
     Returns (embedding, eigenvalues); embedding columns are eigenvectors 2..N_DIMS+1
     (eigenvector 1 is the trivial all-ones vector and is discarded).
     """
@@ -237,6 +232,8 @@ def embed_movement(movement_label, movement_folder,
     color_df, meta_df  = load_color_features(movement_folder)
     meta_raw           = load_metadata_raw(movement_folder)
 
+    # Per-movement runs use their own natural vocabularies unless the cross-
+    # movement embedding passes a shared vocabulary into this function.
     if global_motifs is not None:
         motif_df = motif_df.reindex(columns=global_motifs, fill_value=0)
     if global_color_cols is not None:
@@ -250,7 +247,7 @@ def embed_movement(movement_label, movement_folder,
     if global_meta_cols is not None:
         meta_onehot = meta_onehot.reindex(columns=global_meta_cols, fill_value=0.0)
 
-    print(f"  Paintings — motif: {len(motif_df)}, color: {len(color_df)}")
+    print(f"  Paintings - motif: {len(motif_df)}, color: {len(color_df)}")
     print(f"  Building combined feature matrix...")
     X, paths = build_combined_features(motif_df, color_df, meta_onehot)
     print(f"  Paintings with all three signals: {len(paths)}")
@@ -291,6 +288,8 @@ def embed_movement(movement_label, movement_folder,
 
     print(f"  Medoid: '{medoid_row['painting_name']}' by {medoid_row['author_name']}")
 
+    # The saved scatter plot is a quick visual check of the embedding and marks
+    # the medoid used later in the paper and website.
     color = MOVEMENT_COLORS.get(movement_label, "#888888")
     fig, ax = plt.subplots(figsize=(8, 6))
     ax.scatter(embedding_2d[:, 0], embedding_2d[:, 1],
@@ -302,7 +301,7 @@ def embed_movement(movement_label, movement_folder,
     ax.scatter(embedding_2d[medoid_idx, 0], embedding_2d[medoid_idx, 1],
                s=140, color="gold", edgecolors="black", linewidths=1.2,
                label=f"medoid\n'{medoid_row['painting_name'][:30]}...'", zorder=5)
-    ax.set_title(f"{movement_label} — Laplacian Eigenmap (2D)", fontsize=13)
+    ax.set_title(f"{movement_label} - Laplacian Eigenmap (2D)", fontsize=13)
     ax.set_xlabel("Eigenvector 2  (Fiedler direction)")
     ax.set_ylabel("Eigenvector 3")
     ax.legend(fontsize=8, loc="best")
@@ -323,9 +322,7 @@ def embed_movement(movement_label, movement_folder,
     }
 
 
-# ---------------------------------------------------------------------------
 # Cross-movement embedding
-# ---------------------------------------------------------------------------
 
 def embed_cross_movement():
     """Embed all five movements in a shared 2D space using a common feature vocabulary."""
@@ -359,6 +356,9 @@ def embed_cross_movement():
         d, _, _ = encode_metadata(d_raw, global_top_genres, global_top_nats)
         d = d.reindex(columns=global_meta_cols, fill_value=0.0)
         common = m.index.intersection(c.index).intersection(d.index)
+
+        # The shared embedding only keeps paintings that have motif, color, and
+        # metadata features after every vocabulary has been aligned.
         motif_parts.append(m.loc[common])
         color_parts.append(c.loc[common])
         meta_parts.append(d.loc[common])
@@ -400,7 +400,7 @@ def embed_cross_movement():
             color=MOVEMENT_COLORS.get(label, "#888"),
             label=label,
         )
-    ax.set_title("All Movements — Laplacian Eigenmap (2D)", fontsize=13)
+    ax.set_title("All Movements - Laplacian Eigenmap (2D)", fontsize=13)
     ax.set_xlabel("Eigenvector 2  (Fiedler direction)")
     ax.set_ylabel("Eigenvector 3")
     ax.legend(fontsize=9, markerscale=4, framealpha=0.7)
@@ -413,9 +413,7 @@ def embed_cross_movement():
     print(f"  Saved: {out_dir}/cross_movement_scatter.png")
 
 
-# ---------------------------------------------------------------------------
 # Entry point
-# ---------------------------------------------------------------------------
 
 def main():
     """Run Phase 2 embedding for all five art movements."""

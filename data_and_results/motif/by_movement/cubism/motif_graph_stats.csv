@@ -1,0 +1,2 @@
+art_movement,nodes,edges,density,components,giant_component_nodes,giant_component_edges,avg_degree,avg_weighted_degree,average_clustering,transitivity,average_shortest_path_giant,diameter_giant
+Cubism,59,310,0.181181,1,59,310,10.508475,37.559322,0.04416,0.372294,2.059614,4

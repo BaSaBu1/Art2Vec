@@ -1,0 +1,11 @@
+movement_a,movement_b,cosine_counts,jaccard_top20
+baroque,cubism,0.741231,0.666667
+baroque,impressionism,0.742126,0.481481
+baroque,northern_renaissance,0.899028,0.904762
+baroque,romanticism,0.894558,0.666667
+cubism,impressionism,0.917922,0.600000
+cubism,northern_renaissance,0.845895,0.739130
+cubism,romanticism,0.897734,0.739130
+impressionism,northern_renaissance,0.836789,0.481481
+impressionism,romanticism,0.920520,0.739130
+northern_renaissance,romanticism,0.971409,0.666667
