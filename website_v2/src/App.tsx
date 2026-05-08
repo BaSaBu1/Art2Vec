@@ -49,15 +49,15 @@ const methodNotes = {
 };
 
 const colorNameByHex: Record<string, string> = {
-    "#d4cbb1": "Warm Ivory",
-    "#805040": "Umber Brown",
-    "#807040": "Olive Ochre",
-    "#d4bab1": "Pale Rose",
+    "#d4cbb1": "Ivory",
+    "#805040": "Rust",
+    "#807040": "Olive",
+    "#d4bab1": "Muted Pink",
     "#80706b": "Warm Taupe",
-    "#2a1a15": "Deep Umber",
-    "#2a2523": "Charcoal Brown",
+    "#2a1a15": "Deep Brown",
+    "#2a2523": "Charcoal",
     "#d4ba6a": "Muted Gold",
-    "#807b6b": "Stone Taupe",
+    "#807b6b": "Stone Grey",
     "#803116": "Burnt Sienna",
 };
 
@@ -1429,7 +1429,8 @@ function NetworkModal({
             return;
         }
         scrollEl.scrollLeft = (scrollEl.scrollWidth - scrollEl.clientWidth) / 2;
-        scrollEl.scrollTop = (scrollEl.scrollHeight - scrollEl.clientHeight) / 2;
+        scrollEl.scrollTop =
+            (scrollEl.scrollHeight - scrollEl.clientHeight) / 2;
     }, [graph]);
 
     const selectNode = (node: MotifGraphNode) => {
