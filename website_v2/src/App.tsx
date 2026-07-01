@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import {
     ArrowRight,
+    ChevronDown,
     Info,
     Maximize2,
     RotateCcw,
@@ -335,7 +336,7 @@ function Hero({
             <div className="hero-copy">
                 <div className="hero-eyebrow">
                     <span className="label">
-                        Spring 2026 - Macalester College - COMP 479
+                        Spring 2026 - Macalester College - MATH 479
                     </span>
                 </div>
                 <h1 className="display hero-title">
@@ -949,6 +950,10 @@ function IntroSlide({
                 Five movements. Ten networks. One spectral map.
             </p>
             <ArtworkConstellation data={data} variant="slide" />
+            <div className="intro-scroll-hint" aria-hidden="true">
+                <span>Swipe for more</span>
+                <ChevronDown size={16} />
+            </div>
         </SlideFrame>
     );
 }
